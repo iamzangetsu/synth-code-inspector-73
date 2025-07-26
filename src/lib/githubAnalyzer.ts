@@ -21,6 +21,7 @@ export interface RepositoryAnalysis {
     humanPercentage: number;
     overallConfidence: number;
   };
+  hasLovableLabel: boolean;
 }
 
 interface GitHubFile {
@@ -265,6 +266,43 @@ async function getAllFiles(owner: string, repo: string, path: string = '', maxDe
   return allFiles;
 }
 
+async function checkForLovableKeyword(owner: string, repo: string, allFiles: GitHubFile[]): Promise<boolean> {
+  // Check index.html and package.json in root
+  const specialFiles = ['index.html', 'package.json'];
+  
+  for (const fileName of specialFiles) {
+    const file = allFiles.find(f => f.name === fileName && f.path === fileName);
+    if (file && file.download_url) {
+      try {
+        const content = await fetchFileContent(file.download_url);
+        if (content.toLowerCase().includes('lovable')) {
+          return true;
+        }
+      } catch (error) {
+        console.warn(`Failed to check ${fileName} for lovable keyword:`, error);
+      }
+    }
+  }
+  
+  // Check src folder files
+  const srcFiles = allFiles.filter(file => file.path.startsWith('src/'));
+  
+  for (const file of srcFiles) {
+    if (file.download_url) {
+      try {
+        const content = await fetchFileContent(file.download_url);
+        if (content.toLowerCase().includes('lovable')) {
+          return true;
+        }
+      } catch (error) {
+        console.warn(`Failed to check ${file.path} for lovable keyword:`, error);
+      }
+    }
+  }
+  
+  return false;
+}
+
 export async function analyzeGitHubRepository(
   repositoryUrl: string,
   onProgress?: (current: number, total: number, currentFile: string) => void
@@ -280,6 +318,10 @@ export async function analyzeGitHubRepository(
   // Fetch all files in the repository
   onProgress?.(0, 1, 'Fetching repository structure...');
   const allFiles = await getAllFiles(owner, repo);
+  
+  // Check for lovable keyword in src files, index.html, and package.json
+  onProgress?.(0, 1, 'Checking for Lovable keyword...');
+  const hasLovableLabel = await checkForLovableKeyword(owner, repo, allFiles);
   
   // Filter files we can analyze
   const analyzeableFiles = allFiles.filter(file => 
@@ -346,6 +388,7 @@ export async function analyzeGitHubRepository(
     totalFiles: allFiles.length,
     analyzedFiles: fileAnalyses.length,
     files: fileAnalyses,
-    overallStats
+    overallStats,
+    hasLovableLabel
   };
 }

@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Brain, User, Zap, AlertTriangle, CheckCircle, Github, FileCode, Eye } from "lucide-react";
+import { Brain, User, Zap, AlertTriangle, CheckCircle, Github, FileCode, Eye, Heart } from "lucide-react";
 import { analyzeCode } from "@/lib/aiDetection";
 import { analyzeGitHubRepository } from "@/lib/githubAnalyzer";
 import type { AnalysisResult } from "@/lib/aiDetection";
@@ -376,6 +376,12 @@ export function CodeAnalyzer() {
               <CardTitle className="flex items-center gap-2">
                 <Github className="w-5 h-5 text-primary" />
                 Repository Analysis
+                {repoAnalysis.hasLovableLabel && (
+                  <Badge className="bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+                    <Heart className="w-3 h-3 mr-1" />
+                    Lovable
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
                 {repoAnalysis.repositoryUrl}
